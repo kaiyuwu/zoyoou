@@ -15,6 +15,10 @@ public class ModelFactory {
 		switch(type){
 		case USER:
 			return new UserModel();
+		case CONTACTINFO:
+			return new ContactInfoModel();
+		case USER_COMMUNITY:
+			return new UserCommunityModel();
 		default: 
 			return null; 
 		}

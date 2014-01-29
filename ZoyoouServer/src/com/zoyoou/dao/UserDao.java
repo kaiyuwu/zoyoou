@@ -4,6 +4,7 @@
 package com.zoyoou.dao;
 
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,8 +22,8 @@ import com.zoyoou.resource.ErrorMessages;
  */
 public class UserDao extends AbstractDataAccess<User> {
 
-	public UserDao() throws SQLException {
-		super();
+	public UserDao(Connection connection) throws SQLException {
+		super(connection);
 	
 	}
 
@@ -33,19 +34,18 @@ public class UserDao extends AbstractDataAccess<User> {
 	static final String NICKNAME="NickName";
 	
 	
-	private static final String FIND_BY_ID="{call GetUserInfo(?)}";
-	private static final String FIND_BY_USERNAME="{CALL GetUserLoginInfo(?)}";
-	private static final String INSERT_USER="{CALL InsertUserInfo(?, NULL, ?, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ?)}";
-	private static final String INSERT_USER_COMMNUNITY="{CALL InsertUserCommunityRelationship(?, ?, ?, ?)}";
-	private static final String UPDATE_USER="{CALL UpdateUserInfo(?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?)}";
-	private static final String DELETE_USER="{CALL DeleteUserInfo(?)}";
+	static final String FIND_BY_ID="{call GetUserInfo(?)}";
+	static final String FIND_BY_USERNAME="{CALL GetUserLoginInfo(?)}";
+	static final String INSERT_USER="{CALL InsertUserInfo(?, NULL, ?, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, ?)}";
+	static final String UPDATE_USER="{CALL UpdateUserInfo(?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?)}";
+	static final String DELETE_USER="{CALL DeleteUserInfo(?)}";
 	
 
 	/* (non-Javadoc)
 	 * @see com.zouyou.dao.IDataAccess#findAll()
 	 */
 	@Override
-	public List<User> findAll() {
+	public List<User> findAll()  throws Exception{
 		//CallableStatement cs = this.conn.prepareCall()
 		// TODO Auto-generated method stub
 		return null;
@@ -55,7 +55,7 @@ public class UserDao extends AbstractDataAccess<User> {
 	 * @see com.zouyou.dao.IDataAccess#finalBy(java.lang.String)
 	 */
 	@Override
-	public List<User> findAllBy(String queryCondition) {
+	public List<User> findAllBy(String queryCondition)  throws Exception{
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -63,105 +63,61 @@ public class UserDao extends AbstractDataAccess<User> {
 	/* (non-Javadoc)
 	 * @see com.zouyou.dao.IDataAccess#findById(long)
 	 */
-	@SuppressWarnings("finally")
 	@Override
-	public User findById(long id) {
+	public User findById(long id)  throws Exception{
 		User user = new User();
-		try {
-			CallableStatement cs = this.conn.prepareCall(FIND_BY_ID);
-			cs.setLong(1, id);
-			ResultSet result = cs.executeQuery();
+		user.setUserId(id);
+
+		CallableStatement cs = this.conn.prepareCall(FIND_BY_ID);
+		cs.setLong(1, id);
+		ResultSet result = cs.executeQuery();
 			
-	
-			if(result.next()){
-				user = getUserFromResult(result);
-			}else{
-				List<String> errors = new ArrayList<String>();
-				errors.add(String.format(ErrorMessages.NO_RECORD_FOUND_BY_ID, id));
-				user.setErrorList(errors);
-			}
-			
-			
-		} catch (SQLException e) {
-			//e.printStackTrace();
+
+		if(result.next()){
+			user = getUserFromResult(result);
+		}else{
 			List<String> errors = new ArrayList<String>();
-			errors.add(e.toString());
+			errors.add(String.format(ErrorMessages.NO_RECORD_FOUND_BY_ID, id));
 			user.setErrorList(errors);
-		}finally{
-			return user;
 		}
+		return user;
 	}
 
 	/* (non-Javadoc)
 	 * @see com.zouyou.dao.IDataAccess#create(java.lang.Object)
 	 */
-	@SuppressWarnings("finally")
 	@Override
-	public User create(User entity) {
+	public User create(User entity)  throws Exception{
 		User user = entity;
-		try {
-		
-			CallableStatement csUser = this.conn.prepareCall(INSERT_USER);
-			csUser.setString(1, user.getUserName());
-			csUser.setString(2, user.getPwd());
-			csUser.registerOutParameter(3, java.sql.Types.BIGINT);
-			csUser.execute();
-			long uid = csUser.getLong(3);
-			
-			CallableStatement csUserCommunity = this.conn.prepareCall(INSERT_USER_COMMNUNITY) ;
-			csUserCommunity.setLong(1, uid);
-			csUserCommunity.setLong(2, user.getCommunityRelation().getCommunity().getCommunityId());
-			csUserCommunity.setShort(3, user.getCommunityRelation().getRole().getRoleId());
-			
-			csUserCommunity.registerOutParameter(4, java.sql.Types.BIGINT);
-			csUserCommunity.execute();
-			long cid = csUserCommunity.getLong(4);
-			
-			
-			user.setUserId(uid);
-			user.getCommunityRelation().setId(cid);
-			this.conn.commit();
-			
-		} catch (SQLException e) {
-			//e.printStackTrace();
-			List<String> errors = new ArrayList<String>();
-			errors.add(e.toString());
-			user.setErrorList(errors);
-			this.conn.rollback();
-		}finally{
-			return user;
-		}
+		CallableStatement csUser = this.conn.prepareCall(INSERT_USER);
+		csUser.setString(1, user.getUserName());
+		csUser.setString(2, user.getPwd());
+		csUser.registerOutParameter(3, java.sql.Types.BIGINT);
+		csUser.execute();
+		long uid = csUser.getLong(3);
+		user.setUserId(uid);
+		return user;
 	}
 
 	
 
-	@SuppressWarnings("finally")
-	public User findByUserName(String username){
+	public User findByUserName(String username) throws Exception{
 		
 		User user = new User();
-		try {
-			CallableStatement cs = this.conn.prepareCall(FIND_BY_USERNAME);
-			cs.setString(1, username);
-			ResultSet result = cs.executeQuery();
-			
-	
-			if(result.next()){
-				user = getUserFromResult(result,true);
-			}else{
-				List<String> errors = new ArrayList<String>();
-				errors.add(String.format(ErrorMessages.NO_RECORD_FOUND_BY_USERNAME, username));
-				user.setErrorList(errors);
-			}
-			
-			
-		} catch (SQLException e) {
-			//e.printStackTrace();
+		CallableStatement cs = this.conn.prepareCall(FIND_BY_USERNAME);
+		cs.setString(1, username);
+		ResultSet result = cs.executeQuery();
+		
+
+		if(result.next()){
+			user = getUserFromResult(result,true);
+		}else{
 			List<String> errors = new ArrayList<String>();
-			errors.add(e.toString());
+			errors.add(String.format(ErrorMessages.NO_RECORD_FOUND_BY_USERNAME, username));
 			user.setErrorList(errors);
-		}finally{
-			return user;
 		}
+			
+		return user;
 
 	}
 	
@@ -202,63 +158,40 @@ public class UserDao extends AbstractDataAccess<User> {
 
 
 
-	@SuppressWarnings("finally")
 	@Override
-	public User update(User entity) {
+	public User update(User entity)  throws Exception{
 		User user = entity;
-		try {
+		CallableStatement csUser = this.conn.prepareCall(UPDATE_USER);
+		csUser.setLong(1, user.getUserId());
+		csUser.setString(2, user.getUserName());
+		csUser.setString(3,user.getPwd());
+		csUser.setShort(4, user.getActiveStatus().getActiveId());
+		csUser.setString(5, user.getNickName());
+		csUser.setBoolean(6, user.isGender());
+		csUser.setDate(7, new Date(user.getDob().getMillis()));
+		csUser.setString(8,  user.getContactinfo().getAddress1());
+		csUser.setString(9,  user.getContactinfo().getAddress2());
+		csUser.setString(10, user.getContactinfo().getCity());
+		csUser.setString(11,  user.getContactinfo().getProvince());
+		csUser.setString(12, user.getContactinfo().getPostCode());
+		csUser.setString(13, user.getContactinfo().getEmail1());
+		csUser.setString(14,  user.getContactinfo().getEmail2());
+		csUser.setString(15,  user.getContactinfo().getHomePhone());
+		csUser.setString(16, user.getContactinfo().getWorkPhone());
+		csUser.setString(17, user.getContactinfo().getCellPhone());
+				
+		csUser.execute();
 		
-			CallableStatement csUser = this.conn.prepareCall(UPDATE_USER);
-			csUser.setLong(1, user.getUserId());
-			csUser.setString(2, user.getUserName());
-			csUser.setString(3,user.getPwd());
-			csUser.setShort(4, user.getActiveStatus().getActiveId());
-			csUser.setString(5, user.getNickName());
-			csUser.setBoolean(6, user.isGender());
-			csUser.setDate(7, new Date(user.getDob().getMillis()));
-			csUser.setString(8,  user.getContactinfo().getAddress1());
-			csUser.setString(9,  user.getContactinfo().getAddress2());
-			csUser.setString(10, user.getContactinfo().getCity());
-			csUser.setString(11,  user.getContactinfo().getProvince());
-			csUser.setString(12, user.getContactinfo().getPostCode());
-			csUser.setString(13, user.getContactinfo().getEmail1());
-			csUser.setString(14,  user.getContactinfo().getEmail2());
-			csUser.setString(15,  user.getContactinfo().getHomePhone());
-			csUser.setString(16, user.getContactinfo().getWorkPhone());
-			csUser.setString(17, user.getContactinfo().getCellPhone());
-					
-			csUser.execute();
-			this.conn.commit();
-			
-		} catch (SQLException e) {
-			List<String> errors = new ArrayList<String>();
-			errors.add(e.toString());
-			user.setErrorList(errors);
-			this.conn.rollback();
-		}finally{
-			return user;
-		}
+		return user;
 	}
 
-	@SuppressWarnings("finally")
 	@Override
-	public User remove(long id) {
+	public User remove(long id)  throws Exception{
 		User user = findById(id);
-		try {
-			CallableStatement csUser = this.conn.prepareCall(DELETE_USER);
-			csUser.setLong(1, id);
-			csUser.execute();
-			this.conn.commit();
-			
-		} catch (SQLException e) {
-			List<String> errors = new ArrayList<String>();
-			errors.add(e.toString());
-			user.setErrorList(errors);
-			user.setUserId(id);
-			this.conn.rollback();
-		}finally{
-			return user;
-		}
+		CallableStatement csUser = this.conn.prepareCall(DELETE_USER);
+		csUser.setLong(1, id);
+		csUser.execute();
+		return user;
 	
 	}
 	

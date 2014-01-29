@@ -1,5 +1,6 @@
 package com.zoyoou.dao;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -7,9 +8,8 @@ import com.zoyoou.common.entity.ActiveStatus;
 
 public class ActiveStatusDao extends AbstractDataAccess<ActiveStatus> {
 
-	public ActiveStatusDao() throws SQLException {
-		super();
-		// TODO Auto-generated constructor stub
+	public ActiveStatusDao(Connection connection) throws SQLException {
+		super(connection);
 	}
 
 	@Override

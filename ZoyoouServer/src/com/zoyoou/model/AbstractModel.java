@@ -3,10 +3,13 @@
  */
 package com.zoyoou.model;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.zoyoou.common.entity.IEntity;
+import com.zoyoou.dao.ConnectionPool;
 import com.zoyoou.dao.DataAccessFactory;
 import com.zoyoou.dao.DataAccessType;
 import com.zoyoou.dao.IDataAccess;
@@ -17,8 +20,9 @@ import com.zoyoou.dao.IDataAccess;
  */
 public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	
-	DataAccessType daoType = null; 
+	DataAccessType daoType = null;
 	IDataAccess<E> dao = null;
+	Connection connection;
 	
 	protected AbstractModel(DataAccessType daoType){
 		this.daoType = daoType;
@@ -27,9 +31,16 @@ public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	
 	@SuppressWarnings("unchecked")
 	protected void initDao() throws SQLException{
-		
-		this.dao =  (IDataAccess<E>) DataAccessFactory.getDataAccess(this.daoType);
+		this.connection = ConnectionPool.getInstance().getConnection();
+		this.dao =  (IDataAccess<E>) DataAccessFactory.getDataAccess(this.daoType, connection);
 	}
+
+	@SuppressWarnings("unchecked")
+	protected void initDao(Connection connection) throws SQLException{
+		this.connection = connection;
+		this.dao =  (IDataAccess<E>) DataAccessFactory.getDataAccess(this.daoType, connection);
+	}
+
 	protected void closeDao() throws Exception{
 		this.dao.close();
 	}
@@ -39,9 +50,9 @@ public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	 */
 	@Override
 	public List<E> findAll() throws Exception {
-		initDao();
+		this.initDao();
 		List<E> list = dao.findAll();
-		closeDao();
+		this.closeDao(); 
 		return list;
 	}
 
@@ -50,9 +61,9 @@ public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	 */
 	@Override
 	public List<E> findAllBy(String queryCondition) throws Exception {
-		initDao();
+		this.initDao();
 		List<E> list =  dao.findAllBy(queryCondition);
-		closeDao();
+		this.closeDao();
 		return list;
 	}
 
@@ -61,9 +72,9 @@ public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	 */
 	@Override
 	public E findById(long id) throws Exception {
-		initDao();
+		this.initDao();
 		E entity =  this.dao.findById(id);
-		closeDao();
+		this.closeDao();
 		return entity;
 	}
 
@@ -72,10 +83,7 @@ public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	 */
 	@Override
 	public E create(E entity) throws Exception {
-		initDao();
-		entity = this.dao.create(entity);
-		closeDao();
-		return  entity;
+		return  this.create(entity, true);
 		
 	}
 
@@ -84,10 +92,7 @@ public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	 */
 	@Override
 	public E update(E entity) throws Exception {
-		initDao();
-		entity = this.dao.update(entity);
-		closeDao();
-		return entity;
+		return this.update(entity, true);
 	}
 
 
@@ -96,12 +101,95 @@ public abstract class AbstractModel<E extends IEntity> implements IModel<E> {
 	 */
 	@Override
 	public E remove(long id) throws Exception {
-		initDao();
-		E entity = this.dao.remove(id);
-		closeDao();
-		return entity;
+		return this.remove(id, true);
+	}
+
+
+	/* (non-Javadoc)
+	 * @see com.zoyoou.model.IModel#create(com.zoyoou.common.entity.IEntity, boolean)
+	 */
+	@Override
+	public E create(E entity, boolean autoDao) throws Exception {
+		if(autoDao){
+			try{
+				this.initDao();
+				this.connection.setAutoCommit(false);
+				entity = this.dao.create(entity);
+				return entity;
+				
+			}catch(Exception e){
+				List<String> errors = new ArrayList<String>();
+				errors.add(e.toString());
+				entity.setErrorList(errors);
+				return entity;
+				
+			}finally{
+				this.connection.commit();
+				this.closeDao();
+				
+			}			
+		}else 
+			return this.dao.create(entity);
+		
+	}
+
+
+	/* (non-Javadoc)
+	 * @see com.zoyoou.model.IModel#update(com.zoyoou.common.entity.IEntity, boolean)
+	 */
+	@Override
+	public E update(E entity, boolean autoDao) throws Exception {
+		if(autoDao){
+			try{
+				this.initDao();
+				this.connection.setAutoCommit(false);
+				entity = this.dao.update(entity);
+				return entity;
+				
+			}catch(Exception e){
+				List<String> errors = new ArrayList<String>();
+				errors.add(e.toString());
+				entity.setErrorList(errors);
+				return entity;
+				
+			}finally{
+				this.connection.commit();
+				this.closeDao();
+				
+			}
+		}else
+			return this.dao.update(entity);
+
+	}
+
+
+	/* (non-Javadoc)
+	 * @see com.zoyoou.model.IModel#remove(long, boolean)
+	 */
+	@Override
+	public E remove(long id, boolean autoDao) throws Exception {
+		if(autoDao){
+			try{
+				this.initDao();
+				this.connection.setAutoCommit(false);
+					
+				E entity = this.dao.remove(id);
+
+				return entity;			
+			}catch(Exception e){
+				return null;
+			}finally{
+				this.connection.commit();
+				this.closeDao();
+				
+			}
+			
+		}else{
+			return this.dao.remove(id);
+		}
+	
 	}
 	
 	
-
+	
 }

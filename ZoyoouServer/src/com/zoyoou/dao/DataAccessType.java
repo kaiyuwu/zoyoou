@@ -9,7 +9,9 @@ package com.zoyoou.dao;
  */
 public enum DataAccessType {
 	USER(1),
-	COMMUNITY(2);
+	CONTACTINFO(2),
+	COMMUNITY(3),
+	USERCOMMUNITY(4);
 	
 	
 	public final int Value;

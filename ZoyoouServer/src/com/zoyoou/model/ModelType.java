@@ -8,7 +8,9 @@ package com.zoyoou.model;
  *
  */
 public enum ModelType {
-	USER(1);
+	USER(1),
+	CONTACTINFO(2),
+	USER_COMMUNITY(3);
 	
 	public  final int Value;
 	private ModelType(int value){

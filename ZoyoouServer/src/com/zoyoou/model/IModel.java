@@ -18,4 +18,8 @@ public interface IModel <E extends IEntity>{
 	E create(E entity)  throws Exception;
 	E update(E entity)  throws Exception;
 	E remove(long id)  throws Exception; 
+	E create(E entity, boolean autoDao)  throws Exception;
+	E update(E entity, boolean autoDao)  throws Exception;
+	E remove(long id, boolean autoDao)  throws Exception; 
+
 }

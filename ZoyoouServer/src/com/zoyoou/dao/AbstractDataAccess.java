@@ -19,18 +19,15 @@ public abstract class AbstractDataAccess<E extends IEntity> implements IDataAcce
 	 * Constructor
 	 * @throws SQLException 
 	 */
-	public AbstractDataAccess() throws SQLException{
-		ConnectionPool connectionPool = ConnectionPool.getInstance();
-		this.conn = connectionPool.getConnection();
-		this.conn.setAutoCommit(false);
-
+	public AbstractDataAccess(Connection conn) throws SQLException{
+		this.conn = conn;
 	}
 
 	/* (non-Javadoc)
 	 * @see com.zouyou.dao.IDataAccess#getConnection()
 	 */
 	@Override
-	public Connection getConnection() {
+	public Connection getConnection()  throws Exception{
 		return this.conn;
 	}
 

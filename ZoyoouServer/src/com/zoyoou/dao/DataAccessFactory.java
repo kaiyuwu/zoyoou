@@ -3,6 +3,7 @@
  */
 package com.zoyoou.dao;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import com.zoyoou.common.entity.IEntity;
@@ -13,12 +14,16 @@ import com.zoyoou.common.entity.IEntity;
  */
 public class DataAccessFactory {
 	
-	public static IDataAccess<? extends IEntity> getDataAccess(DataAccessType type) throws SQLException{
+	public static IDataAccess<? extends IEntity> getDataAccess(DataAccessType type, Connection connection) throws SQLException{
 		switch(type){
 		case USER:
-			return new UserDao();
+			return new UserDao(connection);
 		case COMMUNITY:
-			return null;//todo:
+			return null;//todo
+		case CONTACTINFO:
+			return new ContactInfoDao(connection);
+		case USERCOMMUNITY:
+			return new UserCommunityDao(connection);
 		default:
 			return null;
 		}
