@@ -14,13 +14,12 @@ import com.zoyoou.model.ModelType;
  * @author kaiwu
  *
  */
-public abstract class AbstractZuoyouWebservice <E extends IEntity> implements IZuoyouWebService <E> {
+public abstract class AbstractZuoyouWebservice <T extends IModel<E>,E extends IEntity> implements IZuoyouWebService <E> {
 
-	protected IModel<E> model;
+	protected T model;
 
-	@SuppressWarnings("unchecked")
 	protected AbstractZuoyouWebservice(ModelType type){
-		this.model =(IModel<E>) ModelFactory.getModel(type);
+		this.model = ModelFactory.getModel(type);
 	}
 	
 	/* (non-Javadoc)

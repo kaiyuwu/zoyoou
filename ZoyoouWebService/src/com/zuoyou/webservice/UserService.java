@@ -20,7 +20,7 @@ import com.zoyoou.model.UserModel;
  */
 @Provider
 @Path(Constants.ServicePath.USER_SERVICE_PATH)
-public class UserService extends AbstractZuoyouWebservice<User> {
+public class UserService extends AbstractZuoyouWebservice<UserModel,User> {
 
 	public UserService(){
 		super(ModelType.USER);
@@ -31,7 +31,7 @@ public class UserService extends AbstractZuoyouWebservice<User> {
 	@Produces({ MediaType.APPLICATION_JSON})
 	public User login(@QueryParam(Constants.QueryParam.USERNAME) String username,
 					  @QueryParam(Constants.QueryParam.PASSWORD) String password) throws Exception{
-		return ((UserModel)this.model).login(username, password);
+		return (this.model).login(username, password);
 	}
 
 }
